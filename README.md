@@ -2,7 +2,7 @@
 
 ## Goal #1
 
-Call census api for social characteristics data for the state of Iowa. Clean the data to create a human readable dataframe. Exploratory analysis can be found in the eda_notebook folder. The script census_tract_api.py can be run from terminal with the following parameters:
+Call census api for social characteristics data for the state of Iowa. Clean the data to create a human readable dataframe. Exploratory analysis can be found in the _eda_notebook_ folder. The script _census_tract_api_ can be run from terminal with the following parameters:
 
 ```
 year = year of desired census api (integer)
