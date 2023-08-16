@@ -8,6 +8,8 @@ Call census api for social characteristics data for the state of Iowa. Clean the
 year = year of desired census api (integer)
 profile = data profile type desired from census api (string)
 state_id = state desired from census api (string)
+
+output = csv file of final census dataframe
 ```
 
 ## Goal #2
