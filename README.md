@@ -2,7 +2,13 @@
 
 ## Goal #1
 
-Call census api for social characteristics data for the state of Iowa. Clean the data to create a human readable dataframe. Code will the moved from Jupyter to a pyton script. This can be applied to all eliglble states with census.gov
+Call census api for social characteristics data for the state of Iowa. Clean the data to create a human readable dataframe. Exploratory analysis can be found in the eda_notebook folder. The script census_tract_api.py can be run from terminal with the following parameters:
+
+```
+year = year of desired census api (integer)
+profile = data profile type desired from census api (string)
+state_id = state desired from census api (string)
+```
 
 ## Goal #2
 Once applied to all eligible states, conduct further analysis to find trends and statistical summaries on social characteristics data.
