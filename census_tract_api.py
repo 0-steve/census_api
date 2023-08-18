@@ -1,24 +1,8 @@
 import pandas as pd
 import requests
-import configparser
-import os
 import aiohttp
 import asyncio
-
-def census_key():
-    """
-    Output: 
-        Returns your Census API key
-    """
-    
-    secret_path = os.path.expanduser("~") + "/.secrets" # .secrets should live in your home directory 
-    config = configparser.RawConfigParser()
-    config.read(secret_path)
-
-    details_dict = dict(config.items("CENSUS_API"))
-    airtable_key = details_dict["census_api_key"]
-
-    return airtable_key
+import functions.census_functions as census
 
 class census_tract():
     def __init__(self, year, profile, state_id, api_key):
@@ -214,7 +198,7 @@ if __name__ == '__main__':
     parser.add_argument("state_id", type=str, help="The state you want census data for")
     args = parser.parse_args()
 
-    census_class = census_tract(args.year, args.profile, args.state_id, census_key())
+    census_class = census_tract(args.year, args.profile, args.state_id, census.census_key())
     df_final = census_class.create_census_tract_df()
 
     df_final.to_csv(f"census_tract_output_state{args.state_id}.csv", index = False)
