@@ -11,7 +11,7 @@ profile = data profile type desired from census api (string)
 output = csv file of final census dataframe
 ```
 
-Run the function _get_state_codes_ to get a csv of all state codes from census. Make sure to place the csv file output in the golder _state_codes_. The script will use this file to collect census tract data for all included states.
+Run the function _get_state_codes_ to get a csv of all state codes from census. Make sure to place the csv file output in the folder _state_codes_. The script will use this file to collect census tract data for all included states.
 
 ## Goal #2
 Once applied to all eligible states, conduct further analysis to find trends and statistical summaries on social characteristics data.
