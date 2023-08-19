@@ -7,8 +7,9 @@ Call census api for social characteristics data for all recognized states. Clean
 ```
 year = year of desired census api (integer)
 profile = data profile type desired from census api (string)
+  -default is "DP02"
 
-output = csv file of final census dataframe
+output = csv file of the state's cleaned census tract dataframe
 ```
 
 Run the function _get_state_codes_ to get a csv of all state codes from census. Make sure to place the csv file output in the folder _state_codes_. The script will use this file to collect census tract data for all included states.
