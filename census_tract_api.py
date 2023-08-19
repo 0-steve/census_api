@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 import aiohttp
 import asyncio
+from functools import lru_cache
 import functions.census_functions as census
 
 class census_tract():
@@ -37,10 +38,11 @@ class census_tract():
         
         return df_tract
     
+    @lru_cache(maxsize=128)
     def census_variable_names(self, variables):
         """
         Input: 
-            variables = list of variables provided for the desire census profile
+            variables = tuple of variables provided for the desire census profile
 
         Output: 
             Returns census api variable & variable names
@@ -61,6 +63,7 @@ class census_tract():
 
         return variable_labels
     
+    @lru_cache(maxsize=128)
     def apply_variable_cols(self):
         """
         Output: 
@@ -76,10 +79,10 @@ class census_tract():
         col_keep = list(df_vars.variable[-5:])
 
         # get variable names from census codes
-        variable_names = self.census_variable_names(list(df_vars.variable[:-5]))
+        variable_names = self.census_variable_names(tuple(df_vars.variable[:-5]))
 
         # combine columns
-        new_cols = variable_names + col_keep
+        new_cols = list(variable_names) + col_keep
 
         # apply column names
         df_tract.columns = new_cols
@@ -194,14 +197,18 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("year", type=int, help="The year you want census data for")
-    parser.add_argument("profile", type=str, help="The data profile you want census data for")
-    parser.add_argument("state_id", type=str, help="The state you want census data for")
+    parser.add_argument("profile", type=str, nargs='?', default="DP02", help="The data profile you want census data for")
     args = parser.parse_args()
 
-    census_class = census_tract(args.year, args.profile, args.state_id, census.census_key())
-    df_final = census_class.create_census_tract_df()
+    state_codes = pd.read_csv("state_codes/census_state_codes_cut.csv", dtype = "str")
 
-    df_final.to_csv(f"census_tract_output_state{args.state_id}.csv", index = False)
+    for name, code in zip(state_codes["name"], state_codes["state_code"]):
+        print("")
+        print(f"Finding census data for {name}")
+        census_class = census_tract(args.year, args.profile, code, census.census_key())
+        census_state_df = census_class.create_census_tract_df()
+        census_state_df.to_csv(f"census_tract_{name.lower()}.csv", index = False)
+        print(f"Census tract data for {name} output as csv file")
 
 
 
