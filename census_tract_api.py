@@ -1,22 +1,22 @@
 import pandas as pd
-import requests
+import os
 import aiohttp
 import asyncio
 from functools import lru_cache
 import functions.census_functions as census
 
 class census_tract():
-    def __init__(self, year, profile, state_id, api_key):
+    def __init__(self, year, profile, state_codes, api_key):
         """ 
         year = year of desired census api
         profile = data profile type desired from census api
-        state_id = state desired from census api
+        state_codes = tuple of desired states from census api
         api_key = api key needed for census api
         """
 
         self.year = year
         self.profile = profile 
-        self.state_id = state_id
+        self.state_codes = state_codes
         self.api_key = api_key
 
     def census_tract_api(self):
@@ -24,19 +24,26 @@ class census_tract():
         Output: 
             Returns raw census api data as pandas dataframe
         """
-        
-        url = f"https://api.census.gov/data/{self.year}/acs/acs5/profile?get=group({self.profile})&for=tract:*&in=state:{self.state_id}&key={self.api_key}"
 
-        # request url for provided variable code & year
-        get_response = requests.get(url)
+        census_tract_data = []
 
-        # convert api return as into json
-        json_return = get_response.json()
+        print("")
+        print("Connecting to Census API ...")
 
-        # convert json to pandas data frame
-        df_tract = pd.DataFrame(json_return)  
-        
-        return df_tract
+        async def get_census_tract_data():
+            session_timeout = aiohttp.ClientTimeout(total=None)
+            async with aiohttp.ClientSession(timeout=session_timeout) as session:
+                for code in self.state_codes:
+                    response = await session.get(f"https://api.census.gov/data/{self.year}/acs/acs5/profile?get=group({self.profile})&for=tract:*&in=state:{code}&key={self.api_key}", ssl=False)
+                    json_return = await response.json()
+                    census_tract_data.append(json_return)
+                    print("Found census data for state code:", code)
+
+        asyncio.run(get_census_tract_data())
+
+        print("Found all states!")
+
+        return census_tract_data
     
     @lru_cache(maxsize=128)
     def census_variable_names(self, variables):
@@ -52,6 +59,9 @@ class census_tract():
 
         variable_labels = []
 
+        print("")
+        print("Finding variable names from each variable code ...")
+
         async def get_variables():
             async with aiohttp.ClientSession() as session:
                 for var in variables:
@@ -60,6 +70,8 @@ class census_tract():
                     variable_label = json_return["label"]
                     variable_labels.append(variable_label)
         asyncio.run(get_variables())
+
+        print("Found all variables names!")
 
         return variable_labels
     
@@ -70,7 +82,9 @@ class census_tract():
             Returns dataframe with census variable names as column headers
         """
         
-        df_tract = self.census_tract_api()
+        census_tract_api_return = self.census_tract_api()
+
+        df_tract = pd.concat([ pd.DataFrame(api_return) for api_return in census_tract_api_return ])
 
         # transpose first row containing all variable codes
         df_vars = df_tract.iloc[:1, :].T.rename(columns={0:"variable"})
@@ -97,6 +111,8 @@ class census_tract():
         Output: 
             Returns dataframe of only geographic data
         """
+        print("")
+        print("Creating dataframe for geography data ...")
 
         # create data frame of geographic data
         df_census_geo = df.iloc[:, -5:]
@@ -104,7 +120,9 @@ class census_tract():
         # replace header with first row as lowercase strings
         df_census_geo.columns = [ col.lower() for col in df_census_geo.iloc[0] ] 
 
-        df_census_geo = df_census_geo[1:]
+        df_census_geo = df_census_geo[1:].rename(columns = {"name": "tract_name", "state": "state_code"})
+
+        print("Geography dataframe created!")
 
         return df_census_geo
     
@@ -118,20 +136,28 @@ class census_tract():
             Returns dataframe of re-organized geo variables
         """
 
+        print("")
+        print("Cleaning variable names ...")
+
         # get variables for each geo id
-        geo_df_lst = []
+        # geo_df_lst = []
         df_census_variables = df.iloc[1:, :-4] # remove additional geo data
 
-        for geo_id in df_census_variables["GEO_ID"]:
+        def clean_geo_variables(geo_id):
             df_census_variables_filter = df_census_variables[df_census_variables["GEO_ID"] == geo_id] # filter for each geo_id; every row of the dataframe
             geo_dict = df_census_variables_filter.set_index("GEO_ID").agg(dict,1).to_dict() # create dictionary of geo_id and each of it's variables + values
             geo_dict_values = list(geo_dict.values())[0]
             initial_geo_df = pd.DataFrame({"variable_name": list(geo_dict_values.keys()), "value": list(geo_dict_values.values())}) # create temp dataframe of the geo's variables & values
             initial_geo_df["geo_id"] = list(geo_dict.keys())[0] # create column so every row has the corresponding geo_id
             initial_geo_df["value"] = initial_geo_df["value"].fillna(0) 
-            geo_df_lst.append(initial_geo_df)
+
+            return initial_geo_df
+
+        geo_df_lst = map(clean_geo_variables, df_census_variables["GEO_ID"])
 
         geo_variables_df = pd.concat(geo_df_lst)
+
+        print("Variable names cleaned!")
 
         return geo_variables_df
     
@@ -148,6 +174,9 @@ class census_tract():
         # create a column for each component for df_variable_codes
 
         geo_variable_codes = self.geo_variables(df)
+
+        print("")
+        print("Breaking up variables by measurement type, demographic_target, & demographic ...")
 
         measurement = []
         demographic_target = []
@@ -173,6 +202,8 @@ class census_tract():
         geo_variable_codes["demographic_target"] = demographic_target
         geo_variable_codes["demographic"] = demographic
 
+        print("Variable breakouts created!")
+
         return geo_variable_codes
     
     def create_census_tract_df(self):
@@ -190,6 +221,29 @@ class census_tract():
         census_tract_df = geo_df.merge(variables_df, on = "geo_id", how = "left")
 
         return census_tract_df
+    
+    def final_census_tract_df(self, state_name_df):
+        """
+        Input: 
+            df = dataframe constructed from create_census_tract_df()
+
+        Output: 
+            Returns dataframe with state names appended on
+        """
+
+        census_tract_df = self.create_census_tract_df()
+
+        census_tract_df_final = census_tract_df.merge(state_name_df, on = "state_code").rename(columns = {"name": "state_name"})
+    
+        # re order columns
+        cols = list(census_tract_df_final.columns[:2]) + list(census_tract_df_final.columns[-1:]) + list(census_tract_df_final.columns[2:-1])
+
+        census_tract_df_final = census_tract_df_final[cols]
+
+        print("")
+        print("Census tract dataframe created")
+
+        return census_tract_df_final
 
 
 if __name__ == '__main__':
@@ -200,15 +254,20 @@ if __name__ == '__main__':
     parser.add_argument("profile", type=str, nargs='?', default="DP02", help="The data profile you want census data for")
     args = parser.parse_args()
 
-    state_codes = pd.read_csv("state_codes/census_state_codes_cut.csv", dtype = "str")
+    state_codes_df = pd.read_csv("state_codes/census_state_codes.csv", dtype = "str")
+    state_codes = tuple(state_codes_df["state_code"])
 
-    for name, code in zip(state_codes["name"], state_codes["state_code"]):
-        print("")
-        print(f"Finding census data for {name}")
-        census_class = census_tract(args.year, args.profile, code, census.census_key())
-        census_state_df = census_class.create_census_tract_df()
-        census_state_df.to_csv(f"census_tract_{name.lower()}.csv", index = False)
-        print(f"Census tract data for {name} output as csv file")
+    print("")
+    print(f"Finding census data for {len(state_codes)} states ...")
+
+    census_class = census_tract(args.year, args.profile, state_codes, census.census_key())
+    census_state_df = census_class.final_census_tract_df(state_codes_df)
+
+    filename = f"census_tract_{args.year}.csv"
+    census_state_df.to_csv(filename, index = False)
+
+    print("")
+    print(f"Census tract output {filename} saved in {os.getcwd()}")
 
 
 

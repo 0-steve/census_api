@@ -38,7 +38,7 @@ def get_state_codes():
     json_return = get_response.json()
 
     # convert api return into dataframe & rename header
-    df_state_code = pd.DataFrame(json_return[1:], dtype = "str").rename(columns = {0: "name", 1: "state_code"})
+    df_state_code = pd.DataFrame(json_return[1:-1], dtype = "str").rename(columns = {0: "name", 1: "state_code"})
 
     print("")
     print("State codes output as csv file")
