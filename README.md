@@ -1,6 +1,6 @@
 # census_api analysis
 
-## Goal #1
+## Goal #1 (1_build)
 
 Call census api for social characteristics data for all recognized states (minus PR). Clean the data to create a human readable dataframe. The script _census_tract_api_ can be run from terminal with the following parameters:
 
@@ -15,8 +15,8 @@ output = csv file of the state's cleaned census tract dataframe
 
 Run the function _get_state_codes_ to get a csv of all state codes (minus PR) from census. Make sure to place the csv file output in the folder _state_codes_. The script will use this file to collect census tract data for all included states.
 
-## Goal #2
-Once applied to all eligible states, conduct further analysis to find trends and statistical summaries on social characteristics data.
+## Goal #2 (2_learn)
+Conduct exploratory data analysis on social characteristics data for each state returned from 1_build. Learn trends & visualize analysis in a Jupyter notebook.
 
 ## Goal #3
 Conduct clustering analysis on on social characteristics data for all eligible states & census tracts.
