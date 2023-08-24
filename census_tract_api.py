@@ -214,11 +214,13 @@ class census_tract():
 
         census_api_df = self.apply_variable_cols()
 
+        census_variable_codes = census_api_df.iloc[:1, :-5].T.reset_index().rename({"index": "variable_name", 0: "variable_code"}, axis = 1)
+
         geo_df = self.geo_df(census_api_df)
 
         variables_df = self.variable_categories(census_api_df)
 
-        census_tract_df = geo_df.merge(variables_df, on = "geo_id", how = "left")
+        census_tract_df = geo_df.merge(variables_df, on = "geo_id", how = "left").merge(census_variable_codes, on = "variable_name", how = "left")
 
         return census_tract_df
     
@@ -236,7 +238,7 @@ class census_tract():
         census_tract_df_final = census_tract_df.merge(state_name_df, on = "state_code").rename(columns = {"name": "state_name"})
     
         # re order columns
-        cols = list(census_tract_df_final.columns[:2]) + list(census_tract_df_final.columns[-1:]) + list(census_tract_df_final.columns[2:-1])
+        cols = list(df.columns[:2]) + list(df.columns[-1:]) + list(df.columns[2:5]) + list(df.columns[-2:-1]) + list(df.columns[5:-2])
 
         census_tract_df_final = census_tract_df_final[cols]
 

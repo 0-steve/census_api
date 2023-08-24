@@ -1,5 +1,7 @@
 census_outputs/
 state_codes/census_state_codes_cut.csv
+census_api/eda_notebook/census_api.ipynb
+state_codes/census_state_codes_cut.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
