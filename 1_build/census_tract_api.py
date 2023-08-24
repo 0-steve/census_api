@@ -256,7 +256,7 @@ if __name__ == '__main__':
     parser.add_argument("profile", type=str, nargs='?', default="DP02", help="The data profile you want census data for")
     args = parser.parse_args()
 
-    state_codes_df = pd.read_csv("state_codes/census_state_codes.csv", dtype = "str")
+    state_codes_df = pd.read_csv("../state_codes/census_state_codes.csv", dtype = "str")
     state_codes = tuple(state_codes_df["state_code"])
 
     print("")
