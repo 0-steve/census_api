@@ -2,6 +2,7 @@ census_outputs/
 notebook/
 state_codes/census_state_codes_cut.csv
 state_codes/census_state_codes_cut.csv
+test/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

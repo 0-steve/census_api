@@ -77,6 +77,8 @@ class census_tract():
                     variable_labels.append(variable_label)
         asyncio.run(get_variables())
 
+        variable_labels = np.array(variable_labels)
+
         print("Found all variables names!")
 
         return variable_labels
@@ -96,13 +98,13 @@ class census_tract():
         df_vars = df_tract.iloc[:1, :].T.rename(columns={0:"variable"})
 
         # columns to keep
-        col_keep = list(df_vars.variable[-5:])
+        col_keep = np.array(df_vars.variable[-5:])
 
         # get variable names from census codes
         variable_names = self.census_variable_names(tuple(df_vars.variable[:-5]))
 
         # combine columns
-        new_cols = list(variable_names) + col_keep
+        new_cols = np.concatenate((variable_names, col_keep))
 
         # apply column names
         df_tract.columns = new_cols
@@ -126,7 +128,9 @@ class census_tract():
         # replace header with first row as lowercase strings
         df_census_geo.columns = [ col.lower() for col in df_census_geo.iloc[0] ] 
 
-        df_census_geo = df_census_geo[1:].rename(columns = {"name": "tract_name", "state": "state_code"})
+        df_census_geo = df_census_geo[df_census_geo.geo_id != "GEO_ID"]
+
+        df_census_geo = df_census_geo.rename(columns = {"name": "tract_name", "state": "state_code"})
 
         print("Geography dataframe created!")
 
@@ -148,14 +152,16 @@ class census_tract():
         # get variables for each geo id
         df_census_variables = df.iloc[1:, :-4] # remove additional geo data
 
+        df_census_variables = df_census_variables[df_census_variables.loc[:, "GEO_ID"] != "GEO_ID"]
+
         geo_dict = df_census_variables.set_index("GEO_ID").agg(dict,1).to_dict()  # create dictionary of geo_id and each of it's variables + values
 
-        geo_dict_values = list(geo_dict.values())
+        geo_dict_values = np.array(list(geo_dict.values()))
 
         # geo_variables_df dataframe of the geo's variables & values
         geo_variables_df = pd.DataFrame({"variable_name": [ k for d in geo_dict_values for k in d.keys() ], "value": [ k for d in geo_dict_values for k in d.values() ]})
 
-        geo_variables_df["geo_id"] = list(geo_dict.keys()) * len(geo_variables_df["variable_name"].unique())
+        geo_variables_df["geo_id"] = np.repeat(list(geo_dict.keys()), len(geo_variables_df["variable_name"].unique()))
 
         geo_variables_df["value"] = geo_variables_df["value"].fillna(0)
 
@@ -226,11 +232,15 @@ class census_tract():
                 demographic  = var_split[2].lower()
 
             return demographic
-        
+
+        print("Breaking out measurement") # remove
         geo_variable_codes["measurement"] = geo_variable_codes["variable_name"].map(breakout_measurement)
+        print("Breaking out demographic target") # remove
         geo_variable_codes["demographic_target"] = geo_variable_codes["variable_name"].map(breakout_demographic_target)
+        print("Breaking out demographic") # remove
         geo_variable_codes["demographic"] = geo_variable_codes["variable_name"].map(breakout_demographic)
 
+        print("Converting to dask") # remove
         # convert to dask
         geo_variable_codes = dd.from_pandas(geo_variable_codes, npartitions = 991)
 
@@ -245,8 +255,6 @@ class census_tract():
         """
 
         census_api_df = self.apply_variable_cols()
-
-        # census_variable_codes = census_api_df.iloc[:1, :-5].T.reset_index().rename({"index": "variable_name", 0: "variable_code"}, axis = 1) 
 
         geo_df = self.geo_df(census_api_df)
 
@@ -292,6 +300,7 @@ if __name__ == '__main__':
     startTime = datetime.now()
 
     state_codes_df = pd.read_csv("../state_codes/census_state_codes.csv", dtype = "str")
+
     state_codes = tuple(state_codes_df["state_code"])
 
     print("")
