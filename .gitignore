@@ -3,6 +3,7 @@ notebook/
 state_codes/census_state_codes_cut.csv
 state_codes/census_state_codes_cut.csv
 test/
+2_learn/feature_engineering.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
