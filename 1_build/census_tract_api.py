@@ -52,7 +52,7 @@ class census_tract():
         return census_tract_data
     
     @lru_cache(maxsize=128)
-    def census_variable_names(self, variables):
+    def census_variable_names(self, variables, year=2020):
         """
         Input: 
             variables = tuple of variables provided for the desire census profile
@@ -61,7 +61,7 @@ class census_tract():
             Returns census api variable & variable names
         """
 
-        url = "https://api.census.gov/data/2020/acs/acs5/profile/variables/{}.json"
+        url = f"https://api.census.gov/data/{year}/acs/acs5/profile/variables/" + "{}.json"
 
         variable_labels = []
 
@@ -101,7 +101,7 @@ class census_tract():
         col_keep = np.array(df_vars.variable[-5:])
 
         # get variable names from census codes
-        variable_names = self.census_variable_names(tuple(df_vars.variable[:-5]))
+        variable_names = self.census_variable_names(tuple(df_vars.variable[:-5]), self.year)
 
         # combine columns
         new_cols = np.concatenate((variable_names, col_keep))

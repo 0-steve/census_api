@@ -4,6 +4,8 @@ state_codes/census_state_codes_cut.csv
 state_codes/census_state_codes_cut.csv
 test/
 2_learn/feature_engineering.ipynb
+3_query/census_tract.db
+3_query/census_tract.db.wal
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
