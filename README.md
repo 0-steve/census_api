@@ -19,16 +19,12 @@ Run the function _get_state_codes_ to get a csv of all state codes (minus PR) fr
 Conduct exploratory data analysis on social characteristics data for each state returned from 1_build. Learn trends & visualize analysis in a Jupyter notebook.
 
 ## Goal #3 (3_query)
-Load data into DuckDB to run SQL queries for futher data transformation and analysis
+Load data into DuckDB to run SQL queries for futher data transformation and analysis. Create an interactive chart with Altair to see ancestral country of origin by state.
 
 ## References
 ```
 https://www.census.gov/data/developers/data-sets/acs-5year.html
 https://api.census.gov/data/2021/acs/acs5/profile/groups/DP02.html
 ```
-
-## Coming soon
-
-Further documentation into census.gov API & required python packages
 
 
