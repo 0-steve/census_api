@@ -18,8 +18,14 @@ Run the function _get_state_codes_ to get a csv of all state codes (minus PR) fr
 ## Goal #2 (2_learn)
 Conduct exploratory data analysis on social characteristics data for each state returned from 1_build. Learn trends & visualize analysis in a Jupyter notebook.
 
+![Alt text](/refs/mean_internet_users.png?raw=true)
+
+![Alt text](/refs/histogram_internet.png?raw=true)
+
 ## Goal #3 (3_query)
 Load data into DuckDB to run SQL queries for futher data transformation and analysis. Create an interactive chart with Altair to see ancestral country of origin by state.
+
+![Alt text](/refs/ny_ancestry.png?raw=true)
 
 ## References
 ```
